@@ -1,13 +1,15 @@
-TP
-Romy et Mélanie
-
-
-Affichage graphe:
-
 <!DOCTYPE html>
 <meta charset="utf-8">
+<link href='http://fonts.googleapis.com/css?family=Oleo+Script' rel='stylesheet' type='text/css'>
 <style>
 
+body {
+  font: 400 100px/1.3 'Oleo Script', Helvetica, sans-serif;
+  font-size: 20px;
+
+}
+  
+  
 .links line {
   stroke: #999;
   stroke-opacity: 0.6;
@@ -17,24 +19,44 @@ Affichage graphe:
   stroke: #fff;
   stroke-width: 1.5px;
 }
+  
+  .hidden {
+        display: none;
+    }
+    div.tooltip {
+        color: #007acc;
+        background: rgba(200, 200, 200, 0.8);
+        line-height: 1;
+        padding: 6px;
+        text-shadow: #f5f5f5 0 1px 0;
+        border-radius: 2px;
+        opacity: 0.9;
+        position: absolute;
+    }
+ 
 
 </style>
-<svg width="960" height="600"></svg>
+<svg width="500" height="500"></svg>
 <script src="https://d3js.org/d3.v4.min.js"></script>
 <script>
 
 var svg = d3.select("svg"),
     width = +svg.attr("width"),
     height = +svg.attr("height");
+  
+var tooltip = d3.select('body').append('div')
+    .attr('class', 'hidden tooltip');
  
 var color = d3.scaleOrdinal(d3.schemeCategory20);
 
 var simulation = d3.forceSimulation()
     .force("link", d3.forceLink().id(function(d) { return d.artist; }))
-    .force("charge", d3.forceManyBody())
+    .force("charge", d3.forceManyBody().distanceMax(100))
     .force("center", d3.forceCenter(width / 2, height / 2));
 
 d3.csv("recommandations.csv", function(data){
+  
+  
     var links = [];
     var nodes = new Set();
     for (var i=0; i< data.length; i++){
@@ -44,8 +66,43 @@ d3.csv("recommandations.csv", function(data){
     }
   
   var nodesArray = Array.from(nodes).map(function(e){return {artist: e}});
+ 
+  d3.csv("artists_tags_count.csv", function(data2){
+    for (var i=0; i< nodesArray.length; i++){
+      for (var j=0; j<data2.length;j++){
+        if (nodesArray[i].artist == data2[j].name){
+          nodesArray [i].url = data2[j].pictureurl;
+          nodesArray[i].tags = top5tags(data2[j].tags);
+          nodesArray[i].count = data2[j].count;
+          break;
+        }
+      } 
+    }
+    
+ console.log(nodesArray[1].url)
+   //on va selectionner les top 5 tags
+   function top5tags(tags){
+     top5 =[];
+     n = tags.split(";").length;
+     t = tags.split(";");
+     top5.push(t[0].split("[")[1]); //premier tag (sans le crochet)
+     if (n<5){
+       for (var i=1; i<n-1; i++){
+         top5.push(t[i])
+       }
+       top5.push(t[n-1].split("]")[0])
+     }
+     else {
+       for (var i=1; i<5; i++){
+         top5.push(t[i])
+      }
+     }
+     
+    return top5
+   }
   
-  console.log();
+  
+
  
   var link = svg.append("g")
       .attr("class", "links")
@@ -60,16 +117,36 @@ d3.csv("recommandations.csv", function(data){
     .selectAll("circle")
     .data(nodesArray)
     .enter().append("circle")
-      .attr("r", 5)
-      //.attr("fill", function(d) { return color(d.group); })
+      .attr("r", function(d) {return Math.sqrt(d.count);})
+      .attr("fill", function(d) { return color(d.tags[0]); })
       .call(d3.drag()
           .on("start", dragstarted)
           .on("drag", dragged)
-          .on("end", dragended)); 
+          .on("end", dragended))
+  				.on('mousemove', function(d) {
+                    var mouse = d3.mouse(svg.node()).map(function(d) {
+                        return parseInt(d);
+                    });
+         						
+                    tooltip.classed('hidden', false)
+                        .attr('style', 'left:' + (mouse[0] + 15) +
+                                'px; top:' + (mouse[1] - 35) + 'px')
+                    
+                        .html(d.artist+"<br/>"+"<img src="+ d.url+" height="+110+"/>")
+                    d3.select(this).style("fill", "red").style("opacity", 1);
+                       //.html(d.artist+"<br/>"+d.tags);
+            //.html("<strong>"+d.artist+"</strong> <br/>"+"<span style='color:black'>"+d.tags + "</span>");
+                })
+                .on('mouseout', function() {
+                  d3.select(this).style("fill", function(d){return color(d.tags[0]);}).style("opacity", 1);
+                    tooltip.classed('hidden', true);
+                }); 
   
-  node.append("title")
-      .text(function(d) { return d.artist; });
-  
+ /* node.append("title")
+      .text(function(d) { return d.artist + "\n" +"tags :"+d.tags; })
+      .style("font-size", "40px") ; */
+    
+    
     simulation
       .nodes(nodesArray)
       .on("tick", ticked);
@@ -88,6 +165,8 @@ d3.csv("recommandations.csv", function(data){
         .attr("cx", function(d) { return d.x; })
         .attr("cy", function(d) { return d.y; });
   } 
+    
+  });
   
   });
   
