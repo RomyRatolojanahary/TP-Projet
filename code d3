@@ -100,9 +100,121 @@ d3.csv("recommandations.csv", function(data){
      
     return top5
    }
-  
-  
+   
+  function listerecommandations(data,node){ //data: recommandations, nous allons recommander 5 artistes.
+      n=5;
+      recommandations=new Set();
+      ant = false;
+      //si le noeud est dans la colonne antecedant:
+      for (var i=0; i<data.length; i++){
+        
+        if (data[i].Antecedant == node.artist){
+          //combien de consequences a-t-il? plus ou moins de 5
+          ant = true;
+          j=i;
+          while (j<data.length && data[j].Antecedant==node.artist && recommandations.size<n){
+            recommandations.add(data[j].Consequence);
+            j=j+1;
+          }
+         
+          //si 5 ou + conséquences
+          if (recommandations.size == n){
+            return recommandations;
+          }
+          
+          else{
+            ind = 0;
+				while (ind < recommandations.size && recommandations.size < n){
+					for (var k=0; k< data.length; k++){
+						if (data[k].Consequence== Array.from(recommandations)[ind] && data[k].Antecedant != node.artist && recommandations.size < n){
+							recommandations.add(data[k].Antecedant)
+						}
+					}
+					ind = ind+1;
+				}
+					
+				}
+         
+			//si aucun artiste suggéré n'est présent dans la colonne Antecedant,(ou pas assez) on va aller voir dans la colonne consequence
+		  	if (recommandations.size < n){
+			   //sinon aller voir les recommandations du 1 er artiste de la liste, puis du 2e etc et récursivement
+            ind = 0;
+            while (ind < recommandations.size && recommandations.size < n){
+              for (var k=0; k<data.length; k++){
+                if (data[k].Antecedant == Array.from(recommandations)[ind]){
+                  l=k;
+                  while(recommandations.size<n && data[l].Antecedant == Array.from(recommandations)[ind]){
+					if (data[l].Consequence != node.artist){ 
+						recommandations.add(data[l].Consequence);
+					}
+					l=l+1;
+                  }
+                  break;
+                }
+              }
+              ind = ind +1;
+            }
+			} break;
+          }
+		  // ça devrait suffire
+          
+        }
+      
+      //si le noeud n'est compris que dans la colonne consequence
+	  if (ant == false){
+		  for (var i=0; i< data.length; i++){
+			  //on ajoute tous les antécédents
+			  if (data[i].Consequence == node.artist){
+				  recommandations.add(data[i].Antecedant)
+			  }
+		  }
+		  
+	// s'il n'y a pas assez d'antécédents
+      if (recommandations.size<n){
+		//on regarde si les antécédents ont des conséquences
+		ind = 0;
+            while (ind < recommandations.size && recommandations.size < n){
+              for (var k=0; k<data.length; k++){
+                if (data[k].Antecedant == Array.from(recommandations)[ind]){
+                  l=k;
+                  while(l<data.length && recommandations.size<n && data[l].Antecedant == Array.from(recommandations)[ind]){
+					if (data[l].Consequence != node.artist){ 
+						recommandations.add(data[l].Consequence);
+					}
+					l=l+1;
+                  }
+                  break;
+                }
+              }
+              ind = ind + 1;
+            }
+	  }
 
+	// s'il n'y a toujours pas assez de recommandations, on regarde tous les antécédents
+	if (recommandations.size < n){
+		ind = 0;
+			while (ind < recommandations.size && recommandations.size < n){
+					for (var k=0; k< data.length; k++){
+						if (data[k].Consequence== recommandations[ind] && data[k].Antecedant != node.artist && recommandations.size<n){
+							recommandations.add(data[k].Antecedant)
+						}
+					}
+					ind = ind+1;
+			}
+	}
+
+	  
+	  }
+
+      return recommandations;
+    }
+  
+    
+  
+ for (var i=0; i< nodesArray.length; i++){
+   nodesArray[i].rec = Array.from(listerecommandations(data,nodesArray[i]))
+ }   
+    
  
   var link = svg.append("g")
       .attr("class", "links")
