@@ -36,13 +36,15 @@ body {
  
 
 </style>
-<svg width="500" height="500"></svg>
+<svg></svg> 
 <script src="https://d3js.org/d3.v4.min.js"></script>
 <script>
 
-var svg = d3.select("svg"),
-    width = +svg.attr("width"),
-    height = +svg.attr("height");
+var width=screen.width;
+var height=800;
+var svg = d3.select("svg");
+var container2 = svg.append('g').attr("id","containerLegend");
+var container1=svg.append('g').attr("id","containerGraphe");
   
 var tooltip = d3.select('body').append('div')
     .attr('class', 'hidden tooltip');
@@ -51,7 +53,7 @@ var color = d3.scaleOrdinal(d3.schemeCategory20);
 
 var simulation = d3.forceSimulation()
     .force("link", d3.forceLink().id(function(d) { return d.artist; }))
-    .force("charge", d3.forceManyBody().distanceMax(100))
+    .force("charge", d3.forceManyBody().distanceMax(300))
     .force("center", d3.forceCenter(width / 2, height / 2));
 
 d3.csv("recommandations.csv", function(data){
@@ -216,7 +218,7 @@ d3.csv("recommandations.csv", function(data){
  }   
     
  
-  var link = svg.append("g")
+  var link = container1.append("g")
       .attr("class", "links")
     .selectAll("line")
     .data(links)
@@ -224,7 +226,7 @@ d3.csv("recommandations.csv", function(data){
      .attr("stroke", "black");
   
   
-  var node = svg.append("g")
+  var node = container1.append("g")
       .attr("class", "nodes")
     .selectAll("circle")
     .data(nodesArray)
@@ -257,7 +259,28 @@ d3.csv("recommandations.csv", function(data){
  /* node.append("title")
       .text(function(d) { return d.artist + "\n" +"tags :"+d.tags; })
       .style("font-size", "40px") ; */
-    
+// draw legend
+  var legend = container2.selectAll(".legend")
+      .data(color.domain())
+      .enter().append("g")
+      .attr("class", "legend")
+      .attr("transform", function(d, i) { return "translate(0," + i * 20 + ")"; });
+
+  // draw legend colored rectangles
+  legend.append("rect")
+      .attr("x", 150)
+      .attr("width", 18)
+      .attr("height", 18)
+      .style("fill", color);
+
+  // draw legend text
+  legend.append("text")
+      .attr("x", 140)
+      .attr("y", 9)
+      .attr("dy", ".35em")
+      .style("text-anchor", "end")
+      .text(function(d) { return d;})
+        
     
     simulation
       .nodes(nodesArray)
@@ -298,5 +321,9 @@ function dragended(d) {
   d.fx = null;
   d.fy = null;
 }
+  
+var container2Width=document.getElementById("containerLegend").offsetWidth;
+var container1Width=document.getElementById("containerGraphe").offsetWidth;
+svg.attr("width",container2Width+container1Width).attr("height",height)
 
 </script>
