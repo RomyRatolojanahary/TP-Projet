@@ -136,7 +136,7 @@ window.onload = function(){
 <script>
  
 var width=screen.width;
-var height=800;
+var height=screen.height;
 var svg = d3.select("svg");
 var container2 = svg.append('g').attr("id","containerLegend");
 var container1=svg.append('g').attr("id","containerGraphe");
@@ -147,12 +147,19 @@ var tooltip = d3.select('body').append('div')
     .attr('class', 'hidden tooltip');
  
 var color = d3.scaleOrdinal(d3.schemeCategory20);
-  
+ 
+ svg.call(d3.zoom()
+                  .scaleExtent([1 / 2, 8])
+                  .on("zoom", zoomed));
+
+  function zoomed() {
+    container1.attr("transform", d3.event.transform);
+  }
 
 var simulation = d3.forceSimulation()
     .force("link", d3.forceLink().id(function(d) { return d.artist; }))
-    .force("charge", d3.forceManyBody().distanceMax(200))
-    .force("center", d3.forceCenter(width / 2, height / 2));
+    .force("charge", d3.forceManyBody().distanceMax(150))
+    .force("center", d3.forceCenter(600,400));
 
 
 d3.csv("recommandations.csv", function(data){
@@ -327,7 +334,7 @@ d3.csv("recommandations.csv", function(data){
    
     function affichageselect(artist){
       for (var i=0; i<nodesArray.length; i++){
-        if(nodesArray[i].artist == artist){
+        if(nodesArray[i].artist.toLowerCase() == artist.toLowerCase()){
           clearsvg()
           affichageRecommandations(nodesArray[i], nodesArray)
           break;
@@ -338,7 +345,7 @@ d3.csv("recommandations.csv", function(data){
     function affichageRecommandations(node, nodesArray){
     simulation
      		.force("charge", d3.forceManyBody().distanceMax(150))
-       	.force("center", d3.forceCenter(width / 2.75, height / 2))  
+       	.force("center", d3.forceCenter(600,400))  
 
     var texte0 = container3.append("text")
     		.text("Votre selection : ")
@@ -363,13 +370,13 @@ d3.csv("recommandations.csv", function(data){
     		.style("font-size", "35px");
       
     var texte2 = container3.append("text")
-        .text("Tag : "+node.tags[0] )
+        .text("Tags : "+ node.tags[0]+  ", " + node.tags[1])
         .attr("x", 1150)
         .attr("y",350)
     		.style("font-size", "25px");
   
     container3.append("svg:image")
-   			.attr('x',1150)
+   			.attr('x',1160)
         .attr('y',105)
     		.attr('width',300)
         .attr("xlink:href",node.url)
@@ -444,13 +451,13 @@ d3.csv("recommandations.csv", function(data){
       container3.selectAll("*").remove();
     }
   
-    var texte6 = container1.append("text")
+    var texte6 = container2.append("text")
     		.text("Cliquez sur un artiste pour")
     		.attr('x',500)
     		.attr('y',30)
     		.attr("font-size", "25px");
     
-    var texte7 = container1.append("text")
+    var texte7 = container2.append("text")
     		.text("avoir des recommandations :")
     		.attr('x',500)
     		.attr('y',60)
@@ -497,10 +504,19 @@ d3.csv("recommandations.csv", function(data){
                       
                     }
                   }
-                  
+                  legende0.style("font-size","20px")
+                  legende1.style("font-size","20px")
+                  legende2.style("font-size","20px")
+                  legende3.style("font-size","20px")
+                  legende4.style("font-size","20px")
+                  legende5.style("font-size","20px")
+                  legende6.style("font-size","20px")
+									legende7.style("font-size","20px") 
+                  legende8.style("font-size","20px")
                 }   
             clearsvg() 
-            affichageRecommandations(d,nodesArray);})
+            affichageRecommandations(d,nodesArray);
+          })
   				.on('mousemove', function(d) {
                     var mouse = d3.mouse(svg.node()).map(function(d) {
                         return parseInt(d);
@@ -511,14 +527,15 @@ d3.csv("recommandations.csv", function(data){
                                 'px; top:' + (mouse[1] - 35) + 'px')
                     
                                   
-                               .html(d.artist+"<br/>"+"<img src="+ d.url+" height="+110+"/>"+"<br/>"+d.tags[0]);
+                               .html(d.artist+"<br/>"+"<img src="+ d.url+" height="+110+"/>"+"<br/>"+d.tags[0])
+                    d3.select(this).style("cursor","pointer");
                   
                     //.html(d.artist+"<br/>"+d.tags);
             //.html("<strong>"+d.artist+"</strong> <br/>"+"<span style='color:black'>"+d.tags + "</span>");
                 })
                 .on('mouseout', function() {
                  
-                 
+  
                     tooltip.classed('hidden', true)
                     
                     
@@ -535,7 +552,7 @@ d3.csv("recommandations.csv", function(data){
  }
     
     
- var Pop = ["Avril Lavigne","Lady Gaga", "Katy Perry", "Jennifer Lopez", "Adam Lambert"]
+ 		var Pop = ["Avril Lavigne","Lady Gaga", "Katy Perry", "Jennifer Lopez", "Adam Lambert"]
     var Rock = ["Paramore", "Linkin Park", "My Chemical Romance", "Evanescence", "Red Hot Chili Peppers"]
     var Metal = ["System of a Down", "Metallica", "Slipknot", "Korn", "Avenged Sevenfold"]
     var Indie = ["The Killers", "Arctic Monkeys", "The Strokes", "The Libertines","Florence + the Machine"]
@@ -543,6 +560,7 @@ d3.csv("recommandations.csv", function(data){
     var Alternative = ["Muse", "Radiohead", "Coldplay", "Placebo", "30 Seconds to Mars"]
     var RapRnb = ["Beyonce", "Mariah Carey", "Rihanna", "Eminem", "Ciara"]
     var All = ["Coldplay", "Keane", "Taylor Swift", "Blur", "Iron Maiden"]
+    var HipHop = ["Black Eyed Peas", "Jay-Z", "Nicki Minaj", "Kanye West" ,"T.I."]
     
     
 	// draw legend
@@ -563,9 +581,12 @@ d3.csv("recommandations.csv", function(data){
   
   var legende0 = container2.append("text")
   .text("ALL")
-  .attr("x", 100)
+  .attr("x", 80)
   .attr("y",160)
   .attr("fill", "Black")
+  .on("mousemove", function(){
+      d3.select(this).style("cursor","pointer")
+    })
   .on("click",function(){
       d3.select(this).style("font-size","40px").attr("y",165)
       legende1.style("font-size","20px")
@@ -575,6 +596,7 @@ d3.csv("recommandations.csv", function(data){
       legende5.style("font-size","20px")
       legende6.style("font-size","20px")
       legende7.style("font-size","20px")
+      legende8.style("font-size","20px")
       selectiongenre2("all")
       clearsvg()
       affichageTop5(All, "des artistes")
@@ -583,9 +605,12 @@ d3.csv("recommandations.csv", function(data){
  
   var legende1 = container2.append("text")
   	.text("POP")
-  	.attr("x", 100)
+  	.attr("x", 80)
   	.attr("y",200)
-    .attr("fill", "MediumBlue")
+    .attr("fill", "Blue")
+  	.on("mousemove", function(){
+      d3.select(this).style("cursor","pointer")
+    })
     .on("click",function(){
 			d3.select(this).style("font-size","40px").attr("y",205)
       legende0.style("font-size","20px")
@@ -595,6 +620,7 @@ d3.csv("recommandations.csv", function(data){
       legende5.style("font-size","20px")
       legende6.style("font-size","20px")
       legende7.style("font-size","20px")
+      legende8.style("font-size","20px")
       selectiongenre("pop")
       clearsvg()
       affichageTop5(Pop, " \"Pop\" ")
@@ -603,9 +629,12 @@ d3.csv("recommandations.csv", function(data){
     
     var legende2 = container2.append("text")
   	.text("ROCK")
-  	.attr("x", 100)
+  	.attr("x", 80)
   	.attr("y",240)
-    .attr("fill", "LightSalmon")
+    .attr("fill", "Orange")
+    .on("mousemove", function(){
+      d3.select(this).style("cursor","pointer")
+    })
     .on("click",function(){
 			d3.select(this).style("font-size","40px").attr("y",245)
       legende0.style("font-size","20px")
@@ -615,6 +644,7 @@ d3.csv("recommandations.csv", function(data){
       legende5.style("font-size","20px")
       legende6.style("font-size","20px")
       legende7.style("font-size","20px")
+      legende8.style("font-size","20px")
       selectiongenre("rock")
       clearsvg()
       affichageTop5(Rock, " \"Rock\" ")
@@ -623,9 +653,12 @@ d3.csv("recommandations.csv", function(data){
     
     var legende3= container2.append("text")
   	.text("METAL")
-  	.attr("x", 100)
+  	.attr("x", 80)
   	.attr("y",280)
     .attr("fill", "LimeGreen")
+    .on("mousemove", function(){
+      d3.select(this).style("cursor","pointer")
+    })
     .on("click",function(){
 			d3.select(this).style("font-size","40px").attr("y",285)
       legende0.style("font-size","20px")
@@ -635,6 +668,7 @@ d3.csv("recommandations.csv", function(data){
       legende5.style("font-size","20px")
       legende6.style("font-size","20px")
       legende7.style("font-size","20px")
+      legende8.style("font-size","20px")
       selectiongenre("metal")
       clearsvg()
       affichageTop5(Metal, " \"Metal\" ")
@@ -643,9 +677,12 @@ d3.csv("recommandations.csv", function(data){
     
     var legende4= container2.append("text")
   	.text("INDIE")
-  	.attr("x", 100)
+  	.attr("x", 80)
   	.attr("y",320)
-    .attr("fill", "HotPink")
+    .attr("fill", "Salmon ")
+    .on("mousemove", function(){
+      d3.select(this).style("cursor","pointer")
+    })
     .on("click",function(){
 			d3.select(this).style("font-size","40px").attr("y",325)
       legende0.style("font-size","20px")
@@ -655,6 +692,7 @@ d3.csv("recommandations.csv", function(data){
       legende5.style("font-size","20px")
       legende6.style("font-size","20px")
       legende7.style("font-size","20px")
+      legende8.style("font-size","20px")
       selectiongenre("indie")
       clearsvg()
       affichageTop5(Indie, " \"Indie\"")
@@ -664,9 +702,12 @@ d3.csv("recommandations.csv", function(data){
     
     var legende5 = container2.append("text")
   	.text("CLASSIC ROCK")
-  	.attr("x", 100)
+  	.attr("x", 80)
   	.attr("y",360)
     .attr("fill", "Plum")
+    .on("mousemove", function(){
+      d3.select(this).style("cursor","pointer")
+    })
     .on("click",function(){
 			d3.select(this).style("font-size","40px").attr("y",365)
       legende0.style("font-size","20px")
@@ -676,6 +717,7 @@ d3.csv("recommandations.csv", function(data){
       legende4.style("font-size","20px")
       legende6.style("font-size","20px")
       legende7.style("font-size","20px")
+      legende8.style("font-size","20px")
       selectiongenre("classic rock")
       clearsvg()
       affichageTop5(ClassicRock, " \"Classic Rock\"")
@@ -684,9 +726,12 @@ d3.csv("recommandations.csv", function(data){
     
     var legende6= container2.append("text")
   	.text("ALTERNATIVE")
-  	.attr("x", 100)
+  	.attr("x", 80)
   	.attr("y",400)
     .attr("fill", "MediumPurple")
+    .on("mousemove", function(){
+      d3.select(this).style("cursor","pointer")
+    })
     .on("click",function(){
 			d3.select(this).style("font-size","40px").attr("y",405)
       legende0.style("font-size","20px")
@@ -696,6 +741,7 @@ d3.csv("recommandations.csv", function(data){
       legende4.style("font-size","20px")
       legende5.style("font-size","20px")
       legende7.style("font-size","20px")
+      legende8.style("font-size","20px")
       selectiongenre("alternative")
       clearsvg()
       affichageTop5(Alternative, " \"Alternative\" ")
@@ -704,9 +750,12 @@ d3.csv("recommandations.csv", function(data){
     
     var legende7= container2.append("text")
   	.text("RAP & R'N'B")
-  	.attr("x", 100)
+  	.attr("x", 80)
   	.attr("y",440)
     .attr("fill", "LightSkyBlue")
+    .on("mousemove", function(){
+      d3.select(this).style("cursor","pointer")
+    })
     .on("click",function(){
 			d3.select(this).style("font-size","40px").attr("y",445)
       legende0.style("font-size","20px")
@@ -716,9 +765,35 @@ d3.csv("recommandations.csv", function(data){
       legende4.style("font-size","20px")
       legende5.style("font-size","20px")
       legende6.style("font-size","20px")
+      legende8.style("font-size","20px")
       selectiongenre3("rap","rnb")
       clearsvg()
       affichageTop5(RapRnb, " \"Rap & R'n'B\" ")
+      // afficherTop5
+    });
+
+    
+    var legende8= container2.append("text")
+  	.text("HIP-HOP")
+  	.attr("x", 80)
+  	.attr("y",480)
+    .attr("fill", "Fuchsia ")
+    .on("mousemove", function(){
+      d3.select(this).style("cursor","pointer")
+    })
+    .on("click",function(){
+			d3.select(this).style("font-size","40px").attr("y",485)
+      legende0.style("font-size","20px")
+      legende1.style("font-size","20px")
+      legende2.style("font-size","20px")
+      legende3.style("font-size","20px")
+      legende4.style("font-size","20px")
+      legende5.style("font-size","20px")
+      legende6.style("font-size","20px")
+      legende7.style("font-size","20px")
+      selectiongenre3("hip-hop","hip hop")
+      clearsvg()
+      affichageTop5(HipHop, " \"Hip-Hop\" ")
       // afficherTop5
     });
  
@@ -763,11 +838,11 @@ d3.csv("recommandations.csv", function(data){
     function affichageTop5(liste, genre){
     simulation
      		.force("charge", d3.forceManyBody().distanceMax(150))
-       	.force("center", d3.forceCenter(width / 2.75, height / 2))  
+       	.force("center", d3.forceCenter(600,400))  
 
     var texte0 = container3.append("text")
     		.text("Notre top 5  " + genre  + " : ")
-    		.attr('x',1100)
+    		.attr('x',1000)
     		.attr('y',30)
     		.attr("font-size", "40px");
         
@@ -777,20 +852,20 @@ d3.csv("recommandations.csv", function(data){
 										if (i<3){
                        var texte1 = container3.append("text")
                           .text(nodesArray[j].artist)
-                          .attr("x", 1055+250*i)
+                          .attr("x", 1000+250*i)
                           .attr("y",150)
                           .style("fill", "steelblue")
-                          .style("font-size", "30px");
+                          .style("font-size", "25px");
 
                        var texte2 = container3.append("text")
                           .text("Tag : "+nodesArray[j].tags[0] )
-                          .attr("x", 1055+250*i)
-                          .attr("y",340)
-                          .style("font-size", "25px");
+                          .attr("x", 1000+250*i)
+                          .attr("y",335)
+                          .style("font-size", "20px");
 
                        container3.append("svg:image")
-                           .attr('x',1055+250*i)
-                           .attr('y',145)
+                           .attr('x',1000+250*i)
+                           .attr('y',140)
                            .attr("height",200)
                            .attr('width',170)
                            .attr("xlink:href",nodesArray[j].url)
@@ -803,17 +878,17 @@ d3.csv("recommandations.csv", function(data){
                            .attr("x", 1130+250*(i-3))
                            .attr("y",440)
                            .style("fill", "steelblue")
-                           .style("font-size", "30px");
+                           .style("font-size", "25px");
 
                        var texte2 = container3.append("text")
                            .text("Tag : "+nodesArray[j].tags[0] )
                            .attr("x", 1130+250*(i-3))
-                           .attr("y",630)
-                           .style("font-size", "25px");
+                           .attr("y",625)
+                           .style("font-size", "20px");
 
                        container3.append("svg:image")
                            .attr('x',1130+250*(i-3))
-                           .attr('y',435)
+                           .attr('y',430)
                            .attr('height',200)
                            .attr('width',170)
                            .attr("xlink:href",nodesArray[j].url)
@@ -868,7 +943,7 @@ function dragended(d) {
   
 var container2Width=document.getElementById("containerLegend").offsetWidth;
 var container1Width=document.getElementById("containerGraphe").offsetWidth;
- var container3Width=document.getElementById("containerZoom").offsetWidth;
+var container3Width=document.getElementById("containerZoom").offsetWidth;
 svg.attr("width",container2Width+container1Width+container3Width).attr("height",height)
 
 </script>
